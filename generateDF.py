@@ -8,15 +8,15 @@ def getDirOnly(path):
 def generateTrain(root): # for me C:\Users\piclt\Desktop\Ecole\4A\ProCom\Data
     colname = ["root", "imgNumber", "number_slices", "localImPath", "localMaskPath"]
     stackList = []
-    typePath = os.path.join(root, "CHAOS_Train_Sets\Train_Sets\MR")
+    typePath = os.path.join(root, "CHAOS_Train_Sets/Train_Sets/MR")
         
     for numberDir in getDirOnly(typePath):
         numberPathT2 = os.path.join(typePath, numberDir,"T2SPIR") #T2 images only
         number_slices = len(os.listdir(os.path.join(numberPathT2, "DICOM_anon")))
         
-        localImPath = os.path.join("CHAOS_Train_Sets\Train_Sets\MR", numberDir,
+        localImPath = os.path.join("CHAOS_Train_Sets/Train_Sets/MR", numberDir,
                                    "T2SPIR", "DICOM_anon")
-        localMaskPath = os.path.join("CHAOS_Train_Sets\Train_Sets\MR", numberDir,
+        localMaskPath = os.path.join("CHAOS_Train_Sets/Train_Sets/MR", numberDir,
                                    "T2SPIR", "Ground")
         row = [root, numberDir, number_slices, localImPath, localMaskPath]
         stackList.append(row)
@@ -28,10 +28,10 @@ def generateTrain(root): # for me C:\Users\piclt\Desktop\Ecole\4A\ProCom\Data
 def generateTest(root): # for me C:\Users\piclt\Desktop\Ecole\4A\ProCom\Data
     colname = ["root", "imgNumber", "number_slices", "localImPath"]
     stackList = []
-    typePath = os.path.join(root, "CHAOS_Test_Sets\Test_Sets\MR")
+    typePath = os.path.join(root, "CHAOS_Test_Sets/Test_Sets/MR")
     for numberDir in getDirOnly(typePath):
         numberPathT2 = os.path.join(typePath, numberDir,"T2SPIR") #T2 images only
-        localImPath = os.path.join("CHAOS_Test_Sets\Test_Sets\MR", numberDir,
+        localImPath = os.path.join("CHAOS_Test_Sets/Test_Sets/MR", numberDir,
                                    "T2SPIR", "DICOM_anon")
         number_slices = len(os.listdir(os.path.join(numberPathT2, "DICOM_anon")))
         row = [root, numberDir, number_slices, localImPath]
@@ -42,7 +42,7 @@ def generateTest(root): # for me C:\Users\piclt\Desktop\Ecole\4A\ProCom\Data
     return testDF
             
 if __name__ == "__main__":
-    root = r"C:\Users\nampo\Downloads\Data"
+    root = r"/homes/n20ravel/Documents/Data/"
     train = generateTrain(root)
     train.to_csv(os.path.join(root, "train.csv"), index=False)
     test = generateTest(root)

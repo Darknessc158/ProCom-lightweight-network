@@ -7,6 +7,8 @@ import models
 from loss import DiceBCELoss
 import pandas as pd
 import os
+import sys
+import random
 
 def saveModel(epoch, loss, savePath): 
     path = os.path.join(savePath, f"epoch{epoch}_loss{loss}_model.pth")
@@ -25,10 +27,20 @@ def train(model, criterion, optimizer, trainloader, testloader, N_epoch, savePat
         running_val_loss = 0.0 
         
         for i, data in enumerate(trainloader, 1):
+            print("iterations",i)
             # get the inputs; data is a list of [inputs, labels]
             inputs, labels = data
+            list_depth = list([*range(0,inputs.shape[2],1)])
+            random.shuffle(list_depth)
+            list_depth = list_depth[:16]
+            print(list_depth)
+            inputs  = inputs[:,:,list_depth,:,:]
+            print("inputs", inputs.size())
+            labels = labels[:,list_depth,:,:,:]
             inputs, labels = inputs.to(device), labels.to(device)
-            # zero the parameter gradients
+
+
+            # zerinputso the parameter gradients
             optimizer.zero_grad()
     
             # forward + backward + optimize
@@ -39,21 +51,42 @@ def train(model, criterion, optimizer, trainloader, testloader, N_epoch, savePat
             loss.backward()
             optimizer.step()
     
-            # print statistics
+            # print statisticsrunning_val_loss
             running_loss += loss.item()
-            
-            with torch.no_grad(): 
+            inputs = inputs.detach().cpu()
+            outputs = outputs.detach().cpu()
+            labels = labels.detach().cpu()
+            del inputs
+            del labels
+            torch.cuda.empty_cache()
+
+            with torch.no_grad():
+                print("eval")
                 model.eval() 
-                for data in testloader: 
-                   inputs, outputs = data 
-                   inputs = inputs.to(device)
-                   predicted_outputs = model(inputs) 
-                   val_loss = criterion(predicted_outputs, outputs) 
-                 
-                   running_val_loss += val_loss.item()  
- 
+                for data in testloader:
+                    inputs, outputs = data
+                    list_depth = list([*range(0,inputs.shape[2],1)])
+                    random.shuffle(list_depth)
+                    list_depth = list_depth[:16]
+                    print(list_depth)
+                    inputs  = inputs[:,:,list_depth,:,:]
+                    outputs = outputs[:,list_depth,:,:,:]
+
+                    inputs = inputs.to(device)
+                    outputs = outputs.to(device)
+                    predicted_outputs = model(inputs) 
+                    val_loss = criterion(predicted_outputs, outputs)
+                    print("val_loss")
+                    print(val_loss)
+                    running_val_loss += val_loss.item()
+                    inputs = inputs.detach().cpu()
+                    outputs = outputs.detach().cpu()
+                    del inputs
+                    del outputs
+                    torch.cuda.empty_cache()
+
         # Save the model if the accuracy is the best 
-        if running_val_loss < best_val_loss:
+        if running_val_loss <= best_val_loss:
             saveModel(epoch, running_val_loss, savePath) 
             best_val_loss = running_val_loss 
          
@@ -63,12 +96,13 @@ def train(model, criterion, optimizer, trainloader, testloader, N_epoch, savePat
 
 
 if __name__ == "__main__":
-    root = r"C:\Users\nampo\Downloads\Data"
+    root = r"/homes/n20ravel/Documents/Data/"
     
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(device)
-    
-    savePath = r"C:\Users\nampo\Downloads\Data"
+    print(torch.cuda.memory_summary(device=None, abbreviated=False))
+    torch.cuda.empty_cache()
+    savePath = r"/homes/n20ravel/Documents/Data/"
     model = models.UNet3D(in_channels=1, out_channels=4)
     model.to(device)
     criterion = DiceBCELoss()
@@ -88,9 +122,9 @@ if __name__ == "__main__":
 
     trainset = pd.read_csv(os.path.join(root, "train.csv"))
 
-    trainloader = Dataset(trainset[:16], transform=transform)
+    trainloader = Dataset(trainset[:2])
 
-    testloader = Dataset(trainset[16:], transform=transform)
+    testloader = Dataset(trainset[16:])
 
 
     

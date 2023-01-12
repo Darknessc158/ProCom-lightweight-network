@@ -94,18 +94,40 @@ class UNet3D(nn.Module):
         self.decoder_layers = nn.Sequential(*decoder_layers)
 
     def forward(self, x, return_all=False):
+
         x_enc = [x]
+        print("Forward")
+        print(x.is_cuda)
+        print(x_enc[0].is_cuda)
         for enc_layer in self.encoder_layers:
+            #print(torch.cuda.memory_summary(device=None, abbreviated=False))
+
             x_enc.append(enc_layer(x_enc[-1]))
 
         x_dec = [self.center(x_enc[-1])]
         for dec_layer_idx, dec_layer in enumerate(self.decoder_layers):
-            x_opposite = x_enc[-1-dec_layer_idx]
+            print(dec_layer_idx)
+            #print(torch.cuda.memory_summary(device=None, abbreviated=False))
+            x_opposite = x_enc[-1]
             x_cat = torch.cat(
                 [pad_to_shape(x_dec[-1], x_opposite.shape), x_opposite],
                 dim=1
             )
+            x_opposite = x_opposite.detach().cpu()
+            del x_opposite
+            torch.cuda.empty_cache()
+
+            x_enc[-1] = x_enc[-1].detach().cpu()
+            print(x_enc[-1].is_cuda)
+            del x_enc[-1]
+            torch.cuda.empty_cache()
+            #print(x_opposite)
+
             x_dec.append(dec_layer(x_cat))
+             
+            x_dec[0]= x_dec[0].detach().cpu()
+            del x_dec[0]
+            torch.cuda.empty_cache()
 
         if not return_all:
             return x_dec[-1]

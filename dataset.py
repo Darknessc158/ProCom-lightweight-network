@@ -8,7 +8,7 @@ from PIL import Image
 import torch
 import torch.nn.functional as F
 
-train = pd.read_csv(r"C:\Users\nampo\Downloads\Data\train.csv")
+train = pd.read_csv(r"/homes/n20ravel/Documents/Data/train.csv")
 
 def processMask(maskArray, listValues):
     mask = []
@@ -71,7 +71,7 @@ class Dataset(Dataset):
         return X
     
 if __name__ == "__main__":
-    df= pd.read_csv(r"C:\Users\nampo\Downloads\Data\train.csv")
+    df= pd.read_csv(r"/homes/n20ravel/Documents/Data/train.csv")
     path_mr = os.path.join(df["root"].iloc[0], df["localImPath"].iloc[0])
     path_mask = os.path.join(df["root"].iloc[0], df["localMaskPath"].iloc[0])
     ar1 = getDicom3D(path_mr)
